@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "users": {
+      "title": "UserProfile",
+      "description": "User profile with role-based access level for clinic staff and patients",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["SUPER_ADMIN", "RECEPTIONIST", "CONTENT_EDITOR", "PATIENT"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "patients": {
+      "title": "PatientRecord",
+      "description": "Clinical infertility and EHR record for patients under care of Dr. Zamanian",
+      "type": "object",
+      "properties": {
+        "fileNumber": { "type": "string", "maxLength": 20 },
+        "nationalId": { "type": "string", "maxLength": 20 },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "partnerName": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 20 },
+        "treatmentType": { "type": "string", "maxLength": 50 },
+        "cyclePhase": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["fileNumber", "nationalId", "fullName", "phone"]
+    },
+    "stories": {
+      "title": "PregnancySuccessStory",
+      "description": "Verified patient pregnancy success story with baby photo and written consent",
+      "type": "object",
+      "properties": {
+        "patientInitials": { "type": "string", "maxLength": 100 },
+        "city": { "type": "string", "maxLength": 50 },
+        "infertilityDuration": { "type": "string", "maxLength": 100 },
+        "treatmentType": { "type": "string" },
+        "babyName": { "type": "string", "maxLength": 100 },
+        "quote": { "type": "string", "maxLength": 500 },
+        "writtenConsentObtained": { "type": "boolean" },
+        "consentArchiveCode": { "type": "string", "maxLength": 50 },
+        "published": { "type": "boolean" }
+      },
+      "required": ["patientInitials", "babyName", "quote", "writtenConsentObtained", "published"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/users" },
+      "description": "User profile documents"
+    },
+    "/patients/{patientId}": {
+      "schema": { "$ref": "#/entities/patients" },
+      "description": "Clinical patient electronic health records"
+    },
+    "/stories/{storyId}": {
+      "schema": { "$ref": "#/entities/stories" },
+      "description": "Pregnancy success stories published on Wall of Hope"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@layer base {
+  @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+
+  :root {
+    --font-vazirmatn: 'Vazirmatn', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  html {
+    font-family: var(--font-vazirmatn);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #F8F9FA;
+    color: #1E293B;
+    direction: rtl;
+    text-align: right;
+  }
+}
+
+@theme {
+  --color-mehregan-petrol: #2C5E8A;
+  --color-mehregan-petrolHover: #234b6e;
+  --color-mehregan-sage: #8FA382;
+  --color-mehregan-sageLight: #F0F4EF;
+  --color-mehregan-bone: #F8F9FA;
+  --color-mehregan-gold: #C5A880;
+  --color-mehregan-goldLight: #F6F2EB;
+  --color-mehregan-dark: #1E293B;
+  --color-mehregan-muted: #64748B;
+}
+
+/* Custom Utilities */
+.dir-ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+.dir-rtl {
+  direction: rtl;
+  text-align: right;
+}
