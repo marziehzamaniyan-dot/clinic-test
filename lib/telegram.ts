@@ -97,13 +97,16 @@ export interface BotConfigSettings {
   secretToken: string;
 }
 
-// Environment variables configuration (Secure - never hardcoded in logic)
+// Environment variables & secrets configuration (Loaded strictly via environment variables - never hardcoded)
 function getEnvToken(): string {
-  return process.env.TELEGRAM_BOT_TOKEN || '9118242838:AAEYWiCQp1YeUo-wMCDzhxQjuot8sdVsquM';
+  return process.env.TELEGRAM_BOT_TOKEN || '';
 }
 
 function getEnvWebhookUrl(): string {
-  return process.env.TELEGRAM_WEBHOOK_URL || '';
+  return (
+    process.env.TELEGRAM_WEBHOOK_URL ||
+    (process.env.APP_URL ? `${process.env.APP_URL}/api/telegram/webhook` : '')
+  );
 }
 
 function getEnvWebhookSecret(): string {
@@ -949,6 +952,48 @@ export async function processWebhookUpdate(update: any): Promise<void> {
 
 export function getStoredTelegramMessages(): TelegramMessageItem[] {
   return [...telegramMessages];
+}
+
+/**
+ * Save incoming message from Telegram user directly into the store for admin view
+ */
+export function saveIncomingTelegramMessage(msgData: {
+  chatId: number | string;
+  senderName: string;
+  username?: string;
+  text: string;
+  updateId?: number;
+}): TelegramMessageItem {
+  const item: TelegramMessageItem = {
+    id: `in-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    updateId: msgData.updateId,
+    chatId: msgData.chatId,
+    senderName: msgData.senderName,
+    username: msgData.username,
+    text: msgData.text,
+    timestamp: new Date().toLocaleString('fa-IR'),
+    isFromPatient: true,
+  };
+  telegramMessages.push(item);
+
+  // Update or register user in shared directory
+  const existing = botUsers.get(String(msgData.chatId));
+  if (existing) {
+    existing.lastActive = new Date().toLocaleString('fa-IR');
+    if (msgData.username) existing.username = msgData.username;
+  } else {
+    botUsers.set(String(msgData.chatId), {
+      chatId: msgData.chatId,
+      firstName: msgData.senderName,
+      username: msgData.username,
+      firstJoined: new Date().toLocaleString('fa-IR'),
+      lastActive: new Date().toLocaleString('fa-IR'),
+      appointmentsCount: 0,
+      status: 'active',
+    });
+  }
+
+  return item;
 }
 
 export function getStoredBotUsers(): TelegramBotUser[] {

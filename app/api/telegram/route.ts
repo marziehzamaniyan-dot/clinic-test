@@ -19,6 +19,8 @@ import {
   processWebhookUpdate,
 } from '@/lib/telegram';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const [botInfoRes, webhookInfoRes] = await Promise.all([
@@ -38,6 +40,12 @@ export async function GET() {
       webhook: webhookInfoRes.data || null,
       webhookError: webhookInfoRes.error || null,
       tokenMasked: getBotToken() ? `${getBotToken().substring(0, 10)}...` : '',
+      secretsStatus: {
+        hasBotToken: Boolean(process.env.TELEGRAM_BOT_TOKEN),
+        hasWebhookSecret: Boolean(process.env.TELEGRAM_WEBHOOK_SECRET),
+        configuredWebhookUrl: process.env.TELEGRAM_WEBHOOK_URL || botSettings.webhookUrl,
+        tokenSource: process.env.TELEGRAM_BOT_TOKEN ? 'ENVIRONMENT_SECRET' : 'CUSTOM_ADMIN_SESSION',
+      },
       settings: botSettings,
       users,
       appointments,

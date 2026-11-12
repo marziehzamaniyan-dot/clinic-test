@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MongoUserRepo } from '@/lib/mongodb';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const userCount = await MongoUserRepo.countUsers();

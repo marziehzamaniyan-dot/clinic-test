@@ -24,6 +24,7 @@ import {
   HelpCircle,
   Copy,
   Check,
+  Lock,
 } from 'lucide-react';
 import {
   TelegramBotInfo,
@@ -55,6 +56,15 @@ export default function TelegramBotView() {
   // Selected chat for 2-way messaging
   const [selectedChatId, setSelectedChatId] = useState<number | string | null>(null);
   const [replyText, setReplyText] = useState('');
+
+  // Secrets & Token info
+  const [tokenMasked, setTokenMasked] = useState<string>('');
+  const [secretsStatus, setSecretsStatus] = useState<{
+    hasBotToken: boolean;
+    hasWebhookSecret: boolean;
+    configuredWebhookUrl: string;
+    tokenSource: string;
+  } | null>(null);
 
   // Broadcast form
   const [broadcastTitle, setBroadcastTitle] = useState('اطلاعیه مهم کلینیک دکتر زمانیان');
@@ -88,6 +98,8 @@ export default function TelegramBotView() {
         setAppointments(data.appointments || []);
         setMessages(data.messages || []);
         setBroadcasts(data.broadcasts || []);
+        if (data.tokenMasked) setTokenMasked(data.tokenMasked);
+        if (data.secretsStatus) setSecretsStatus(data.secretsStatus);
 
         if (data.settings) {
           setEditWelcome(data.settings.welcomeMessage || '');
@@ -1188,52 +1200,144 @@ export default function TelegramBotView() {
       {/* TAB 6: BOT MESSAGES & WELCOME SETTINGS                         */}
       {/* ============================================================== */}
       {activeSubTab === 'settings' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-6">
-          <div>
-            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <Settings className="w-5 h-5 text-[#2C5E8A]" />
-              شخصی‌سازی پیام‌های خوش‌آمدگویی و اطلاعات کلینیک در ربات
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              متن‌هایی که کاربران پس از زدن دکمه <code>/start</code> یا مشاهده اطلاعات کلینیک در تلگرام دریافت می‌کنند
-            </p>
+        <div className="space-y-6">
+          {/* Environment Secrets Card */}
+          <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div>
+                <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                  مدیریت متغیرهای محیطی و سکرت‌ها (Environment Secrets)
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  پیکربندی امن توکن و وب‌هوک تلگرام از طریق متغیرهای محیطی سرور بدون قرارگیری مستقیم در کد منبع
+                </p>
+              </div>
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 w-fit">
+                <Lock className="w-3.5 h-3.5" />
+                محافظت‌شده در متغیرهای محیطی
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Telegram Bot Token Status */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700">کلید توکن ربات (TELEGRAM_BOT_TOKEN):</span>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    فعال در سکرت‌ها
+                  </span>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between font-mono text-xs">
+                  <span className="text-slate-800 font-bold tracking-wider">
+                    {tokenMasked || '۹۱۱۸۲۴۲۸۳۸:AAEYWi...'}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-sans">ماسک امنیتی</span>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  توکن دسترسی به Telegram Bot API دریافتی از BotFather@ برای ربات کلینیک (<span className="font-mono">Ebiiiiii_bot@</span>).
+                </p>
+              </div>
+
+              {/* Webhook Secret Status */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700">سکرت اعتبارسنجی وبهوک (TELEGRAM_WEBHOOK_SECRET):</span>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3" />
+                    اعتبارسنجی هدر فعال
+                  </span>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between font-mono text-xs">
+                  <span className="text-slate-800 font-bold tracking-widest">
+                    ••••••••••••••••••••
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-sans font-bold">X-Telegram-Bot-Api-Secret-Token</span>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  جهت اطمینان از اینکه کلیه درخواست‌های ارسالی به اندپوئینت وب‌هوک منحصراً از سرورهای رسمی تلگرام می‌آیند.
+                </p>
+              </div>
+            </div>
+
+            {/* Custom Token Override Form */}
+            <div className="pt-3 border-t border-slate-100 space-y-3">
+              <label className="text-xs font-bold text-slate-700 block">
+                تغییر یا به‌روزرسانی دستی توکن ربات (اختیاری):
+              </label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={customToken}
+                  onChange={(e) => setCustomToken(e.target.value)}
+                  placeholder="توکن جدید را وارد فرمایید (مثال: 9118242838:AAEYWiCQ...)"
+                  className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:bg-white focus:outline-none focus:border-[#2C5E8A]"
+                  dir="ltr"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveSettings}
+                  disabled={loading || !customToken.trim()}
+                  className="px-5 py-2.5 bg-[#2C5E8A] hover:bg-[#234b6e] text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-sm disabled:opacity-50"
+                >
+                  اعمال توکن جدید
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                در صورت وارد کردن توکن جدید، مقدار وارد شده بر متغیرهای محیطی فعلی اولویت یافته و ارتباط بات مجدداً بررسی می‌شود.
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-4">
+          {/* Bot Messages Customization */}
+          <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-6">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                متن پیام خوش‌آمدگویی اصلی (/start):
-              </label>
-              <textarea
-                rows={4}
-                value={editWelcome}
-                onChange={(e) => setEditWelcome(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-[#2C5E8A]"
-              />
+              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-[#2C5E8A]" />
+                شخصی‌سازی پیام‌های خوش‌آمدگویی و اطلاعات کلینیک در ربات
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                متن‌هایی که کاربران پس از زدن دکمه <code>/start</code> یا مشاهده اطلاعات کلینیک در تلگرام دریافت می‌کنند
+              </p>
             </div>
 
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                متن نشانی، تلفن‌های تماس و برنامه بیمارستان‌ها در ربات:
-              </label>
-              <textarea
-                rows={7}
-                value={editClinicInfo}
-                onChange={(e) => setEditClinicInfo(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-[#2C5E8A]"
-              />
-            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  متن پیام خوش‌آمدگویی اصلی (/start):
+                </label>
+                <textarea
+                  rows={4}
+                  value={editWelcome}
+                  onChange={(e) => setEditWelcome(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-[#2C5E8A]"
+                />
+              </div>
 
-            <div className="pt-2 border-t border-slate-100 flex justify-end">
-              <button
-                type="button"
-                onClick={handleSaveSettings}
-                disabled={loading}
-                className="px-6 py-2.5 bg-[#5B8C7A] hover:bg-[#4d7768] text-white text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                ذخیره تغییرات پیام‌ها
-              </button>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  متن نشانی، تلفن‌های تماس و برنامه بیمارستان‌ها در ربات:
+                </label>
+                <textarea
+                  rows={7}
+                  value={editClinicInfo}
+                  onChange={(e) => setEditClinicInfo(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-[#2C5E8A]"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveSettings}
+                  disabled={loading}
+                  className="px-6 py-2.5 bg-[#5B8C7A] hover:bg-[#4d7768] text-white text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  ذخیره تغییرات پیام‌ها
+                </button>
+              </div>
             </div>
           </div>
         </div>
